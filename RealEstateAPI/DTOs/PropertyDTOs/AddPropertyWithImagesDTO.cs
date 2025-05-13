@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http;
 
 namespace RealEstateAPI.DTOs.PropertyDTOs
@@ -15,8 +16,11 @@ namespace RealEstateAPI.DTOs.PropertyDTOs
         [Required]
         public decimal Price { get; set; }
 
-        [Required]
-        public string Location { get; set; }
+        public string AddressLine1 { get; set; } 
+        public string? AddressLine2 { get; set; }
+        public string City { get; set; }
+        public string Governorate { get; set; }
+        public string? PostalCode { get; set; }
 
         public int Bedrooms { get; set; }
 

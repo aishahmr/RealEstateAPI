@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using RealEstateAPI.DTOs.PropertyDTOs;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
@@ -17,8 +18,17 @@ public class AddPropertyDTO
     public decimal Price { get; set; }
 
     [Required]
-    [JsonPropertyName("location")]
-    public string Location { get; set; }
+    public string AddressLine1 { get; set; } // e.g., "35 Nile Corniche"
+
+    public string? AddressLine2 { get; set; } // e.g., "Floor 4, Apartment 12" (optional)
+
+    [Required]
+    public string City { get; set; } // e.g., "Garden City"
+
+    [Required]
+    public string Governorate { get; set; } // e.g., "Cairo"
+
+    public string? PostalCode { get; set; } // e.g., "11511" (optional)
 
     [JsonPropertyName("bedrooms")]
     public int Bedrooms { get; set; }

@@ -38,7 +38,7 @@ namespace RealEstateAPI.Service.Services
                     Title = f.Property.Title.Length > 20
                         ? f.Property.Title.Substring(0, 17) + "..."
                         : f.Property.Title,
-                    Address = f.Property.Location,
+                    Address = $"{f.Property.AddressLine1}, {f.Property.City}, {f.Property.Governorate}",
                     Price = f.Property.Price,
                     FormattedPrice = f.Property.Price.ToString("C0"),  // "C0" = currency with no decimals
                     Area = f.Property.Size,

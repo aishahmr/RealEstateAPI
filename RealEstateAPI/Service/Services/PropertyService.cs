@@ -70,10 +70,13 @@ namespace RealEstateAPI.Service.Services
 
             // Location filter
             if (!string.IsNullOrWhiteSpace(location))
-            {
-                location = location.Trim().ToLower();
-                query = query.Where(p => p.Location.ToLower().Contains(location));
-            }
+{
+    location = location.Trim().ToLower();
+    query = query.Where(p => 
+        p.City.ToLower().Contains(location) ||
+        p.Governorate.ToLower().Contains(location) ||
+        p.AddressLine1.ToLower().Contains(location));
+}
 
             // Price range
             if (minPrice.HasValue)
@@ -120,7 +123,11 @@ namespace RealEstateAPI.Service.Services
                     OwnerName = p.yourName ?? p.User.UserName,
                     ContactInfo = p.MobilePhone,
                     Price = p.Price,
-                    Location = p.Location,
+                    AddressLine1 = p.AddressLine1,
+                    AddressLine2 = p.AddressLine2,
+                    City = p.City,
+                    Governorate = p.Governorate,
+                    PostalCode = p.PostalCode,
                     Bedrooms = p.Bedrooms,
                     Bathrooms = p.Bathrooms,
                     Area = p.Size,
@@ -157,7 +164,11 @@ namespace RealEstateAPI.Service.Services
                 OwnerName = property.yourName,
                 ContactInfo = property.MobilePhone,
                 Price = property.Price,
-                Location = property.Location,
+                AddressLine1 = property.AddressLine1,
+                AddressLine2 = property.AddressLine2,
+                City = property.City,
+                Governorate = property.Governorate,
+                PostalCode = property.PostalCode,
                 Bedrooms = property.Bedrooms,
                 Bathrooms = property.Bathrooms,
                 Area = property.Size,
@@ -181,7 +192,11 @@ namespace RealEstateAPI.Service.Services
                 Title = propertyDto.Title,
                 Description = propertyDto.Description,
                 Price = propertyDto.Price,
-                Location = propertyDto.Location,
+                AddressLine1 = propertyDto.AddressLine1,
+                AddressLine2 = propertyDto.AddressLine2,
+                City = propertyDto.City,
+                Governorate = propertyDto.Governorate,
+                PostalCode = propertyDto.PostalCode,
                 Bedrooms = propertyDto.Bedrooms,
                 Bathrooms = propertyDto.Bathrooms,
                 Size = (int)propertyDto.Area,
@@ -202,8 +217,15 @@ namespace RealEstateAPI.Service.Services
                 Id = property.Id,
                 Title = property.Title,
                 Description = property.Description,
+                OwnerName = property.yourName, 
+                ContactInfo = property.MobilePhone,
+                IsOwner = true,
                 Price = property.Price,
-                Location = property.Location,
+                AddressLine1 = property.AddressLine1,
+                AddressLine2 = property.AddressLine2,
+                City = property.City,
+                Governorate = property.Governorate,
+                PostalCode = property.PostalCode,
                 Bedrooms = property.Bedrooms,
                 Bathrooms = property.Bathrooms,
                 Area = property.Size,
@@ -243,7 +265,11 @@ namespace RealEstateAPI.Service.Services
             property.Title = propertyDto.Title;
             property.Description = propertyDto.Description;
             property.Price = propertyDto.Price;
-            property.Location = propertyDto.Location;
+            property.AddressLine1 = propertyDto.AddressLine1;
+            property.AddressLine2 = propertyDto.AddressLine2;
+            property.City = propertyDto.City;
+            property.Governorate = propertyDto.Governorate;
+            property.PostalCode = propertyDto.PostalCode;
             property.Bedrooms = propertyDto.Bedrooms;
             property.Bathrooms = propertyDto.Bathrooms;
             property.Size = (int)propertyDto.Area;
@@ -295,7 +321,11 @@ namespace RealEstateAPI.Service.Services
                 Title = p.Title,
                 Description = p.Description,
                 Price = p.Price,
-                Location = p.Location,
+                AddressLine1 = p.AddressLine1,
+                AddressLine2 = p.AddressLine2,
+                City = p.City,
+                Governorate = p.Governorate,
+                PostalCode = p.PostalCode,
                 Bedrooms = p.Bedrooms,
                 Bathrooms = p.Bathrooms,
                 Area = p.Size,
@@ -357,7 +387,7 @@ namespace RealEstateAPI.Service.Services
                 {
                     Id = p.Id,
                     Title = p.Title,
-                    Location = p.Location, 
+                    City = p.City, 
                     PriceFormatted = $"${p.Price:n0}", // Formats as "$20,000"
                     AreaFormatted = $"{p.Size} sqft",  // Formats as "2360 sqft"
                     ImageUrl = p.Images.FirstOrDefault().Url ?? "default-image.jpg"

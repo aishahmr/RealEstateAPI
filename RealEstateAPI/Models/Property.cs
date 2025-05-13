@@ -15,7 +15,11 @@ namespace RealEstateAPI.Models
         public string Title { get; set; }
         public string Description { get; set; }
         public decimal Price { get; set; }
-        public string Location { get; set; }
+        public string AddressLine1 { get; set; }
+        public string? AddressLine2 { get; set; }
+        public string City { get; set; }
+        public string Governorate { get; set; }
+        public string? PostalCode { get; set; }
 
         [Column("Area")]
         [JsonPropertyName("area")]

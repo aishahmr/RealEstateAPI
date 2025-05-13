@@ -5,7 +5,11 @@
         public Guid Id { get; set; }
         public string Title { get; set; } // Added to match UI
         public decimal Price { get; set; }
-        public string Location { get; set; }
+        public string AddressLine1 { get; set; }
+        public string? AddressLine2 { get; set; }
+        public string City { get; set; }
+        public string Governorate { get; set; }
+        public string? PostalCode { get; set; }
         public int Size { get; set; } // Consider renaming to 'Area' for UI consistency
         public int Bedrooms { get; set; }
         public int Bathrooms { get; set; }

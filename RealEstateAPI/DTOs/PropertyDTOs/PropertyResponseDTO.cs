@@ -9,18 +9,22 @@
         public string? ContactInfo { get; set; }
         public bool IsOwner { get; set; }
         public decimal Price { get; set; }
-        public string Type { get; set; } 
-        public string Location { get; set; }
+        public string Type { get; set; }
+        public string AddressLine1 { get; set; }
+        public string? AddressLine2 { get; set; }
+        public string City { get; set; }
+        public string Governorate { get; set; }
+        public string? PostalCode { get; set; }
         public int Bedrooms { get; set; }
         public int Bathrooms { get; set; }
         public int Floor { get; set; }
         public List<string> Images { get; set; } = new();
 
-        public int Area { get; set; } // Matches Property.Size (int)
+        public int Area { get; set; } 
 
         // UI-Specific Fields
-        public string FurnishStatus { get; set; } // Note: Matches controller's naming
-        public string MainImageUrl { get; set; }  // Change from computed to settable
+        public string FurnishStatus { get; set; }
+        public string MainImageUrl { get; set; }
         public List<string> Amenities { get; set; } = new(); // Empty list by default
         public DateTime CreatedAt { get; set; }
 
@@ -32,6 +36,6 @@
 
         // Additional UI Helpers
         public string PriceFormatted => Price.ToString("C0"); // $1,234 format
-        public string LocationShort => Location?.Split(',').FirstOrDefault() ?? Location;
+        public string LocationShort => $"{City}, {Governorate}";
     }
 }
