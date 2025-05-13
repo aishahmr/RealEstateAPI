@@ -8,16 +8,19 @@ using System.Linq;
 using System.Threading.Tasks;
 using RealEstateAPI.Service.IServices;
 using RealEstateAPI.DTOs.HomeDTOs;
+using Microsoft.AspNetCore.Identity;
 
 namespace RealEstateAPI.Service.Services
 {
     public class PropertyService : IPropertyService
     {
         private readonly AppDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public PropertyService(AppDbContext context)
+        public PropertyService(AppDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // Original parameterless version
@@ -400,6 +403,64 @@ namespace RealEstateAPI.Service.Services
                 AllProperties = new List<PropertyResponseDTO>() // Omit if not needed
             };
         }
+
+        public async Task<List<PropertyResponseDTO>> GetPropertiesNearUser(string userId, int radiusKm = 10)
+        {
+            // 1. Get user's location
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user?.City == null || user.Governorate == null)
+                return new List<PropertyResponseDTO>();
+
+            // 2. Find properties in same governorate (basic implementation)
+            return await _context.Properties
+                .Where(p => p.Governorate == user.Governorate)
+                .OrderBy(p => p.City == user.City ? 0 : 1) // Prioritize same city
+                .Take(20) // Limit results
+                .Select(p => new PropertyResponseDTO
+                {
+                    // Core fields
+                    Id = p.Id,
+                    Title = p.Title,
+                    Description = p.Description,
+                    Price = p.Price,
+
+                    // Location fields (REQUIRED for LocationShort computation)
+                    City = p.City,
+                    Governorate = p.Governorate,
+                    AddressLine1 = p.AddressLine1,
+                    AddressLine2 = p.AddressLine2,
+                    PostalCode = p.PostalCode,
+
+                    // Property details
+                    Bedrooms = p.Bedrooms,
+                    Bathrooms = p.Bathrooms,
+                    Floor = p.Floor,
+                    Area = p.Size,
+                    FurnishStatus = p.FurnishingStatus,
+                    Type = p.Type,
+                    CreatedAt = p.CreatedAt,
+                    IsOwner = p.UserId == userId, // Critical fix
+                    OwnerName = p.UserId == userId ? "You" : p.yourName ?? "Owner",
+                    ContactInfo = p.UserId == userId ? user.PhoneNumber : p.MobilePhone ?? "Contact unavailable",
+
+                    // Images
+                    Images = p.Images.OrderBy(i => i.CreatedAt).Select(i => i.Url).ToList(),
+                    MainImageUrl = p.Images.OrderBy(i => i.CreatedAt)
+                             .Select(i => i.Url)
+                             .FirstOrDefault() ?? "/images/default.jpg",
+
+                    // Amenities
+                    Amenities = !string.IsNullOrEmpty(p.Amenities)
+            ? p.Amenities.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
+            : new List<string>()
+
+                    // LocationShort is automatically computed from City/Governorate!
+                })
+    .AsNoTracking()
+    .ToListAsync();
+        }
+
+
 
     }
 }

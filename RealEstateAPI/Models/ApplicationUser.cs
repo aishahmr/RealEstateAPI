@@ -23,6 +23,9 @@ namespace RealEstateAPI.Models
 
         [Column("PhoneNumber")]
         public override string? PhoneNumber { get; set; }
+        public string? City { get; set; }
+        public string? Governorate { get; set; }
+        public string? District { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool IsActive { get; set; } = true;

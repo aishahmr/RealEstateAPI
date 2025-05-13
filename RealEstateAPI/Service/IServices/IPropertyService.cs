@@ -29,6 +29,7 @@ namespace RealEstateAPI.Service.IServices
         Task<PropertyResponseDTO> AddPropertyAsync(AddPropertyDTO propertyDto, string userId);
         Task<List<string>> UploadImagesAsync(Guid propertyId, List<IFormFile> images);
         Task<bool> UpdatePropertyAsync(UpdatePropertyDTO propertyDto, string currentUserId); 
-        Task<bool> DeletePropertyAsync(Guid id, string currentUserId); 
+        Task<bool> DeletePropertyAsync(Guid id, string currentUserId);
+        Task<List<PropertyResponseDTO>> GetPropertiesNearUser(string userId, int radiusKm = 10);
     }
 }

@@ -540,6 +540,21 @@ namespace RealEstateAPI.Controllers
 
 
 
+        [HttpGet("near-me")]
+        [Authorize]
+        public async Task<IActionResult> GetPropertiesNearMe()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var properties = await _propertyService.GetPropertiesNearUser(userId);
+            return Ok(properties);
+        }
+
+
+
+
     }
 
 

@@ -52,6 +52,8 @@ namespace RealEstateAPI.Controllers
                 PhoneNumber = user.PhoneNumber,
                 Bio = user.Bio,
                 Gender = user.Gender,
+                City = user.City,
+                Governorate = user.Governorate,
                 ProfilePictureUrl = user.ProfilePictureUrl
             };
 

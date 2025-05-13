@@ -9,6 +9,8 @@
         public string? Gender { get; set; }
         public string? ProfilePictureUrl { get; set; }
         public string? Username { get; set; }
+        public string? City { get; set; }
+        public string? Governorate { get; set; }
     }
 }
 

@@ -47,7 +47,9 @@ namespace RealEstateAPI.Service.Services
                 Bio = user.Bio,
                 Gender = user.Gender,
                 ProfilePictureUrl = user.ProfilePictureUrl,
-                UserName = user.UserName // Added Username field
+                UserName = user.UserName,
+                City = user.City, 
+                Governorate = user.Governorate
             };
         }
 
@@ -100,6 +102,8 @@ namespace RealEstateAPI.Service.Services
 
             user.Bio = dto.Bio ?? user.Bio;
             user.Gender = dto.Gender ?? user.Gender;
+            user.City = dto.City ?? user.City;
+            user.Governorate = dto.Governorate ?? user.Governorate;
 
             var updateResult = await _userManager.UpdateAsync(user);
             if (!updateResult.Succeeded)
@@ -113,7 +117,6 @@ namespace RealEstateAPI.Service.Services
             return true;
         }
 
-        // New Method to handle updating users (general update, not just profile)
         public async Task<bool> UpdateUserAsync(ApplicationUser user)
         {
             var result = await _userManager.UpdateAsync(user);

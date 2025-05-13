@@ -17,6 +17,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddScoped<IPropertyService, PropertyService>();
 
 #region Swagger Authentication
 builder.Services.AddSwaggerGen(c =>
