@@ -9,8 +9,11 @@ using RealEstateAPI.Repository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Python.Runtime;
 using RealEstateAPI.Helpers;
 using RealEstateAPI.Service;
+using System;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +21,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddScoped<IPropertyService, PropertyService>();
+// Add HTTP client factory
+builder.Services.AddHttpClient<PricePredictionService>();
+
 
 #region Swagger Authentication
 builder.Services.AddSwaggerGen(c =>
@@ -122,6 +128,12 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 // 📌 Register UserService for Dependency Injection
 builder.Services.AddScoped<IUserService, UserService>();
 #endregion
+
+
+
+
+
+
 
 var app = builder.Build();
 
