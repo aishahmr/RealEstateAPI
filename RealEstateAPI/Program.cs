@@ -12,6 +12,7 @@ using System.Text;
 using Python.Runtime;
 using RealEstateAPI.Helpers;
 using RealEstateAPI.Service;
+using System.Globalization;
 using System;
 using System.Reflection;
 
@@ -21,6 +22,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddScoped<IPropertyService, PropertyService>();
+builder.Services.AddScoped<PropertySeederService>();
+
 // Add HTTP client factory
 builder.Services.AddHttpClient<PricePredictionService>();
 
@@ -155,8 +158,22 @@ app.MapControllers();
 #region Data Seeder
 using (var scope = app.Services.CreateScope())
 {
-    var service = scope.ServiceProvider;
-    DataSeeder.Seed(service);
+    var services = scope.ServiceProvider;
+
+    try
+    {
+        // Run existing DataSeeder first
+        DataSeeder.Seed(services);
+
+        // Then run the PropertySeederService
+        var propertySeeder = services.GetRequiredService<PropertySeederService>();
+        await propertySeeder.SeedProperties();
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while seeding the database.");
+    }
 }
 #endregion
 

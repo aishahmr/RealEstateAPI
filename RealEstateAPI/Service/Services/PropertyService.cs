@@ -83,9 +83,9 @@ namespace RealEstateAPI.Service.Services
 
             // Price range
             if (minPrice.HasValue)
-                query = query.Where(p => p.Price >= minPrice.Value);
+                query = query.Where(p => p.Price2025 >= minPrice.Value);
             if (maxPrice.HasValue)
-                query = query.Where(p => p.Price <= maxPrice.Value);
+                query = query.Where(p => p.Price2025 <= maxPrice.Value);
 
             // Size range
             if (minSize.HasValue)
@@ -125,7 +125,7 @@ namespace RealEstateAPI.Service.Services
                     Description = p.Description,
                     OwnerName = p.yourName ?? p.User.UserName,
                     ContactInfo = p.MobilePhone,
-                    Price = p.Price,
+                    Price = p.Price2025,
                     AddressLine1 = p.AddressLine1,
                     AddressLine2 = p.AddressLine2,
                     City = p.City,
@@ -166,7 +166,7 @@ namespace RealEstateAPI.Service.Services
                 Description = property.Description,
                 OwnerName = property.yourName,
                 ContactInfo = property.MobilePhone,
-                Price = property.Price,
+                Price = property.Price2025,
                 AddressLine1 = property.AddressLine1,
                 AddressLine2 = property.AddressLine2,
                 City = property.City,
@@ -194,7 +194,7 @@ namespace RealEstateAPI.Service.Services
                 UserId = userId,
                 Title = propertyDto.Title,
                 Description = propertyDto.Description,
-                Price = propertyDto.Price,
+                Price2025 = propertyDto.Price,
                 AddressLine1 = propertyDto.AddressLine1,
                 AddressLine2 = propertyDto.AddressLine2,
                 City = propertyDto.City,
@@ -223,7 +223,7 @@ namespace RealEstateAPI.Service.Services
                 OwnerName = property.yourName, 
                 ContactInfo = property.MobilePhone,
                 IsOwner = true,
-                Price = property.Price,
+                Price = property.Price2025,
                 AddressLine1 = property.AddressLine1,
                 AddressLine2 = property.AddressLine2,
                 City = property.City,
@@ -267,7 +267,7 @@ namespace RealEstateAPI.Service.Services
             // Property update logic
             property.Title = propertyDto.Title;
             property.Description = propertyDto.Description;
-            property.Price = propertyDto.Price;
+            property.Price2025 = propertyDto.Price;
             property.AddressLine1 = propertyDto.AddressLine1;
             property.AddressLine2 = propertyDto.AddressLine2;
             property.City = propertyDto.City;
@@ -323,7 +323,7 @@ namespace RealEstateAPI.Service.Services
                 Id = p.Id,
                 Title = p.Title,
                 Description = p.Description,
-                Price = p.Price,
+                Price = p.Price2025,
                 AddressLine1 = p.AddressLine1,
                 AddressLine2 = p.AddressLine2,
                 City = p.City,
@@ -391,7 +391,7 @@ namespace RealEstateAPI.Service.Services
                     Id = p.Id,
                     Title = p.Title,
                     City = p.City, 
-                    PriceFormatted = $"${p.Price:n0}", // Formats as "$20,000"
+                    PriceFormatted = $"${p.Price2025:n0}", // Formats as "$20,000"
                     AreaFormatted = $"{p.Size} sqft",  // Formats as "2360 sqft"
                     ImageUrl = p.Images.FirstOrDefault().Url ?? "default-image.jpg"
                 })
@@ -422,7 +422,7 @@ namespace RealEstateAPI.Service.Services
                     Id = p.Id,
                     Title = p.Title,
                     Description = p.Description,
-                    Price = p.Price,
+                    Price = p.Price2025,
 
                     // Location fields (REQUIRED for LocationShort computation)
                     City = p.City,
@@ -434,7 +434,7 @@ namespace RealEstateAPI.Service.Services
                     // Property details
                     Bedrooms = p.Bedrooms,
                     Bathrooms = p.Bathrooms,
-                    Floor = p.Floor,
+                    Floor = p.FloorLevel,
                     Area = p.Size,
                     FurnishStatus = p.FurnishingStatus,
                     Type = p.Type,

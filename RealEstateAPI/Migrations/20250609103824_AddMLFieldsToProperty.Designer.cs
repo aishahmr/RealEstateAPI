@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RealEstateAPI.Models.Data;
 
@@ -11,9 +12,11 @@ using RealEstateAPI.Models.Data;
 namespace RealEstateAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250609103824_AddMLFieldsToProperty")]
+    partial class AddMLFieldsToProperty
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -153,119 +156,6 @@ namespace RealEstateAPI.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
-                });
-
-            modelBuilder.Entity("Property", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("AddressLine1")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AddressLine2")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Amenities")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Bathrooms")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Bedrooms")
-                        .HasColumnType("int");
-
-                    b.Property<int>("BuildingAge")
-                        .HasColumnType("int");
-
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DocumentUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("FloorLevel")
-                        .HasColumnType("int")
-                        .HasColumnName("Floor_Level");
-
-                    b.Property<string>("FurnishingStatus")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Governorate")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsFeatured")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("MobilePhone")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NearbyFacility")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PostalCode")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("Price2023")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("Price_2023");
-
-                    b.Property<decimal>("Price2024")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("Price_2024");
-
-                    b.Property<decimal>("Price2025")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("Price_2025");
-
-                    b.Property<int>("Size")
-                        .HasColumnType("int")
-                        .HasColumnName("Area")
-                        .HasAnnotation("Relational:JsonPropertyName", "area");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasAnnotation("Relational:JsonPropertyName", "Ad title");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("Type")
-                        .HasAnnotation("Relational:JsonPropertyName", "type");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("VerificationStatus")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("yourName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Properties");
                 });
 
             modelBuilder.Entity("RealEstateAPI.Models.ApplicationUser", b =>
@@ -513,6 +403,112 @@ namespace RealEstateAPI.Migrations
                     b.ToTable("PriceEstimates");
                 });
 
+            modelBuilder.Entity("RealEstateAPI.Models.Property", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AddressLine1")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AddressLine2")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Amenities")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Bathrooms")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Bedrooms")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BuildingAge")
+                        .HasColumnType("int");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DocumentUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Floor")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FurnishingStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("FurnishingStatus")
+                        .HasAnnotation("Relational:JsonPropertyName", "furnish status");
+
+                    b.Property<string>("Governorate")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsFeatured")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MobilePhone")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NearbyFacility")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("NearbyFacility");
+
+                    b.Property<string>("PostalCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("Price2023")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("Price2024")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Size")
+                        .HasColumnType("int")
+                        .HasColumnName("Area")
+                        .HasAnnotation("Relational:JsonPropertyName", "area");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasAnnotation("Relational:JsonPropertyName", "Ad title");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("VerificationStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("yourName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Properties");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -564,20 +560,9 @@ namespace RealEstateAPI.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Property", b =>
-                {
-                    b.HasOne("RealEstateAPI.Models.ApplicationUser", "User")
-                        .WithMany("Properties")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("RealEstateAPI.Models.Booking", b =>
                 {
-                    b.HasOne("Property", "Property")
+                    b.HasOne("RealEstateAPI.Models.Property", "Property")
                         .WithMany("Bookings")
                         .HasForeignKey("PropertyId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -596,7 +581,7 @@ namespace RealEstateAPI.Migrations
 
             modelBuilder.Entity("RealEstateAPI.Models.Favorite", b =>
                 {
-                    b.HasOne("Property", "Property")
+                    b.HasOne("RealEstateAPI.Models.Property", "Property")
                         .WithMany()
                         .HasForeignKey("PropertyId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -626,7 +611,7 @@ namespace RealEstateAPI.Migrations
 
             modelBuilder.Entity("RealEstateAPI.Models.Image", b =>
                 {
-                    b.HasOne("Property", "Property")
+                    b.HasOne("RealEstateAPI.Models.Property", "Property")
                         .WithMany("Images")
                         .HasForeignKey("PropertyId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -637,7 +622,7 @@ namespace RealEstateAPI.Migrations
 
             modelBuilder.Entity("RealEstateAPI.Models.PriceEstimate", b =>
                 {
-                    b.HasOne("Property", "Property")
+                    b.HasOne("RealEstateAPI.Models.Property", "Property")
                         .WithMany("PriceEstimates")
                         .HasForeignKey("PropertyId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -646,13 +631,15 @@ namespace RealEstateAPI.Migrations
                     b.Navigation("Property");
                 });
 
-            modelBuilder.Entity("Property", b =>
+            modelBuilder.Entity("RealEstateAPI.Models.Property", b =>
                 {
-                    b.Navigation("Bookings");
+                    b.HasOne("RealEstateAPI.Models.ApplicationUser", "User")
+                        .WithMany("Properties")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
-                    b.Navigation("Images");
-
-                    b.Navigation("PriceEstimates");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("RealEstateAPI.Models.ApplicationUser", b =>
@@ -664,6 +651,15 @@ namespace RealEstateAPI.Migrations
                     b.Navigation("Filters");
 
                     b.Navigation("Properties");
+                });
+
+            modelBuilder.Entity("RealEstateAPI.Models.Property", b =>
+                {
+                    b.Navigation("Bookings");
+
+                    b.Navigation("Images");
+
+                    b.Navigation("PriceEstimates");
                 });
 #pragma warning restore 612, 618
         }

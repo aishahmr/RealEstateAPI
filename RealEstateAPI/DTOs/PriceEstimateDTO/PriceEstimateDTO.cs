@@ -2,6 +2,7 @@
 {
     public class PriceEstimateDTO
     {
+        
         public decimal Price2023 { get; set; }       
         public decimal Price2024 { get; set; }       
         public decimal Price2025 { get; set; }       

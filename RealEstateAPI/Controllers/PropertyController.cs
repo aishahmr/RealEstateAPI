@@ -14,8 +14,6 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using RealEstateAPI.DTOs.PropertyDTOs;
 using RealEstateAPI.Models;
 using RealEstateAPI.Models.Data;
-using Property = RealEstateAPI.Models.Property; 
-
 using RealEstateAPI.Service.IServices;
 using System.Diagnostics;
 
@@ -109,7 +107,7 @@ namespace RealEstateAPI.Controllers
                 UserId = userId.ToString(),
                 Title = dto.Title?.Trim(),
                 Description = dto.Description?.Trim(),
-                Price = dto.Price,
+                Price2025 = dto.Price,
                 AddressLine1 = dto.AddressLine1?.Trim(),
                 AddressLine2 = dto.AddressLine2?.Trim(),
                 City = dto.City?.Trim(),
@@ -126,7 +124,7 @@ namespace RealEstateAPI.Controllers
                 Type = dto.Type ?? "Apartment",
                 VerificationStatus = "Pending",
                 CreatedAt = DateTime.UtcNow,
-                Floor = dto.Floor
+                FloorLevel = dto.Floor
             };
 
             // 4. DATABASE TRANSACTION
@@ -188,7 +186,7 @@ namespace RealEstateAPI.Controllers
                     OwnerName = property.yourName, // Add this
                     ContactInfo = property.MobilePhone, // Add this
                     IsOwner = true,
-                    Price = property.Price,
+                    Price = property.Price2025,
                     AddressLine1 = dto.AddressLine1?.Trim(),  
                     AddressLine2 = dto.AddressLine2?.Trim(),
                     City = dto.City?.Trim(),
@@ -196,7 +194,7 @@ namespace RealEstateAPI.Controllers
                     PostalCode = dto.PostalCode?.Trim(),
                     Bedrooms = property.Bedrooms,
                     Bathrooms = property.Bathrooms,
-                    Floor = property.Floor,
+                    Floor = property.FloorLevel,
                     Area = property.Size,
                     FurnishStatus = property.FurnishingStatus,
                     Amenities = property.Amenities?.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList(),
@@ -261,7 +259,7 @@ namespace RealEstateAPI.Controllers
                 UserId = user.Id,    
                 Title = propertyDto.Title?.Trim(),
                 Description = propertyDto.Description?.Trim(),
-                Price = propertyDto.Price,
+                Price2025 = propertyDto.Price,
                 AddressLine1 = propertyDto.AddressLine1?.Trim(),
                 AddressLine2 = propertyDto.AddressLine2?.Trim(),
                 City = propertyDto.City?.Trim(),
@@ -289,7 +287,7 @@ namespace RealEstateAPI.Controllers
                     Id = property.Id,
                     Title = property.Title,
                     Description = property.Description,
-                    Price = property.Price,
+                    Price = property.Price2025,
                     AddressLine1 = property.AddressLine1,
                     AddressLine2 = property.AddressLine2,
                     City = property.City,
@@ -322,29 +320,30 @@ namespace RealEstateAPI.Controllers
 
         [Authorize]
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateProperty(Guid id, [FromBody] UpdatePropertyDTO updateDto)
+        public async Task<IActionResult> UpdateProperty(
+            Guid id,
+            [FromBody] UpdatePropertyDTO propertyDto, // JSON data
+            [FromForm] UpdatePropertyImagesDTO? imageDto = null) // Optional form-data
         {
-            // 1. Get current user info - multiple fallback options
+            // 1. Authentication (unchanged)
             var currentUserId = User.FindFirst("userId")?.Value
                              ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                             ?? User.FindFirst("sub")?.Value; // email fallback
+                             ?? User.FindFirst("sub")?.Value;
 
             if (string.IsNullOrEmpty(currentUserId))
-            {
-                return Unauthorized(new { Message = "User identification not found in token" });
-            }
+                return Unauthorized();
 
-            // 2. Verify ID match
-            if (id != updateDto.Id)
-            {
-                return BadRequest(new { Message = "Path ID does not match body ID" });
-            }
+            // 2. Get property with images
+            var property = await _context.Properties
+                .Include(p => p.Images)
+                .FirstOrDefaultAsync(p => p.Id == id);
 
-            // 3. Attempt update
-            var result = await _propertyService.UpdatePropertyAsync(updateDto, currentUserId);
+            if (property == null) return NotFound();
+
+            // 3. Core property update (unchanged)
+            var result = await _propertyService.UpdatePropertyAsync(propertyDto, currentUserId);
             if (!result)
             {
-                // Debug ownership issues
                 var debugInfo = await _context.Properties
                     .Where(p => p.Id == id)
                     .Select(p => new
@@ -355,25 +354,112 @@ namespace RealEstateAPI.Controllers
                         OwnerEmail = p.User.Email,
                         p.VerificationStatus
                     })
-                    .FirstOrDefaultAsync() ?? new
-                    {
-                        PropertyExists = false,
-                        CurrentUserEmail = currentUserId,
-                        PropertyOwnerId = (string)null,
-                        OwnerEmail = (string)null,
-                        VerificationStatus = (string)null
-                    };
+                    .FirstOrDefaultAsync();
 
                 return StatusCode(403, new
                 {
                     Message = "Update failed - ownership or validation issue",
-                    DebugInfo = debugInfo
-
-
-
+                    DebugInfo = debugInfo ?? new
+                    {
+                        PropertyExists = false,
+                        CurrentUserEmail = (string)null,
+                        PropertyOwnerId = (string)null,
+                        OwnerEmail = (string)null,
+                        VerificationStatus = (string)null
+                    }
                 });
             }
 
+            // 4. Handle images if provided
+            if (imageDto != null)
+            {
+                // Remove specified images
+                if (imageDto.ImagesToRemove?.Any() == true)
+                {
+                    var imagesToDelete = property.Images
+                        .Where(img => imageDto.ImagesToRemove.Contains(img.Url))
+                        .ToList();
+
+                    foreach (var img in imagesToDelete)
+                    {
+                        var filePath = Path.Combine("wwwroot", img.Url.TrimStart('/'));
+                        if (System.IO.File.Exists(filePath))
+                            System.IO.File.Delete(filePath);
+                        _context.Images.Remove(img);
+                    }
+                }
+
+                // Add new images
+                if (imageDto.NewImages?.Any() == true)
+                {
+                    var uploadsDir = Path.Combine("wwwroot", "uploads", "properties");
+                    Directory.CreateDirectory(uploadsDir);
+
+                    foreach (var file in imageDto.NewImages)
+                    {
+                        var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+                        var filePath = Path.Combine(uploadsDir, fileName);
+
+                        using (var stream = System.IO.File.Create(filePath))
+                            await file.CopyToAsync(stream);
+
+                        property.Images.Add(new Image
+                        {
+                            Url = $"/uploads/properties/{fileName}",
+                            FileName = file.FileName,
+                            ContentType = file.ContentType,
+                            PropertyId = property.Id
+                        });
+                    }
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        [HttpPut("{id}/images")]
+        [Authorize]
+        public async Task<IActionResult> UpdatePropertyImages(
+    Guid id,
+    [FromForm] UpdatePropertyImagesDTO dto)
+        {
+            // Handle image updates only
+            if (dto.ImagesToRemove?.Any() == true)
+            {
+                var images = await _context.Images
+                    .Where(i => i.PropertyId == id && dto.ImagesToRemove.Contains(i.Url))
+                    .ToListAsync();
+
+                foreach (var img in images)
+                {
+                    System.IO.File.Delete(Path.Combine("wwwroot", img.Url.TrimStart('/')));
+                    _context.Images.Remove(img);
+                }
+            }
+
+            if (dto.NewImages?.Any() == true)
+            {
+                foreach (var file in dto.NewImages)
+                {
+                    var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+                    var filePath = Path.Combine("wwwroot", "uploads", fileName);
+
+                    using (var stream = System.IO.File.Create(filePath))
+                        await file.CopyToAsync(stream);
+
+                    _context.Images.Add(new Image
+                    {
+                        Url = $"/uploads/{fileName}",
+                        PropertyId = id,
+                        FileName = file.FileName,
+                        ContentType = file.ContentType 
+
+                    });
+                }
+            }
+
+            await _context.SaveChangesAsync();
             return NoContent();
         }
 
@@ -517,7 +603,7 @@ namespace RealEstateAPI.Controllers
                 ContactInfo = property.MobilePhone,
                 IsOwner = isOwner,
                 OwnerName = property.yourName ?? property.User?.UserName,
-                Price = property.Price,
+                Price = property.Price2025,
                 AddressLine1=property.AddressLine1,
                 AddressLine2 = property.AddressLine2,
                 City = property.City,
@@ -531,7 +617,7 @@ namespace RealEstateAPI.Controllers
                            ?? new List<string>(),
                 Images = property.Images.Select(i => i.Url).ToList(),
                 CreatedAt = property.CreatedAt,
-                Floor = property.Floor,
+                Floor = property.FloorLevel,
                 Type = property.Type,
                 // Computed fields
 

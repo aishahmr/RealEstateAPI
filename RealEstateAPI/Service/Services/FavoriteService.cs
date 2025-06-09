@@ -39,8 +39,8 @@ namespace RealEstateAPI.Service.Services
                         ? f.Property.Title.Substring(0, 17) + "..."
                         : f.Property.Title,
                     Address = $"{f.Property.AddressLine1}, {f.Property.City}, {f.Property.Governorate}",
-                    Price = f.Property.Price,
-                    FormattedPrice = f.Property.Price.ToString("C0"),  // "C0" = currency with no decimals
+                    Price = f.Property.Price2025,
+                    FormattedPrice = f.Property.Price2025.ToString("C0"),  // "C0" = currency with no decimals
                     Area = f.Property.Size,
                     MainImageUrl = f.Property.Images.Any()
                         ? f.Property.Images.First().Url

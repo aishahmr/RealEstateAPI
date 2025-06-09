@@ -1,64 +1,72 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using RealEstateAPI.Models;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using CsvHelper.Configuration.Attributes;
 
-namespace RealEstateAPI.Models
+public class Property
 {
-    public class Property
-    {
-        public Guid Id { get; set; }
-        public string UserId { get; set; }
+    public Guid Id { get; set; }
+    public string UserId { get; set; }
 
-        [JsonPropertyName("Ad title")]
-        public string Title { get; set; }
-        public string Description { get; set; }
-        public decimal Price { get; set; }
-        public string AddressLine1 { get; set; }
-        public string? AddressLine2 { get; set; }
-        public string City { get; set; }
-        public string Governorate { get; set; }
-        public string? PostalCode { get; set; }
+    [JsonPropertyName("Ad title")]
+    public string Title { get; set; }
 
-        [Column("Area")]
-        [JsonPropertyName("area")]
-        [Display(Name = "Area (m²)")]
-        public int Size { get; set; }
-        public int Bedrooms { get; set; }
-        public int Bathrooms { get; set; }
-        public int Floor { get; set; } // Added for floor number
+    public string Description { get; set; }
 
-        [Column("Type")]
-        [JsonPropertyName("type")]
-        [AllowedValues("Apartment", "apartment", "Villa","villa", "House", "house", ErrorMessage = "Invalid type")]
-        public string Type { get; set; } // apartment, villa, etc.
-        public string VerificationStatus { get; set; } = "Pending";
+    // Price fields for ML model
+    [Column("Price_2023")]
+    public decimal Price2023 { get; set; }
 
-        [Column("FurnishingStatus")]
-        [JsonPropertyName("furnish status")]
-        public string FurnishingStatus { get; set; } // Furnished/Semi-furnished/Not-furnished
+    [Column("Price_2024")]
+    public decimal Price2024 { get; set; }
 
+    [Column("Price_2025")]
+    public decimal Price2025 { get; set; }
 
-        public string Amenities { get; set; } // Comma-separated string (e.g., "Balcony,Garden,Pool")
+    [Column("Area")]
+    [JsonPropertyName("area")]
+    [Display(Name = "Area (sqm)")]
+    public int Size { get; set; } // matches "Area (sqm)"
 
-        // Contact information
-        public string yourName { get; set; } // Added for listing contact
-        public string MobilePhone { get; set; } // Added for listing contact
+    public int Bedrooms { get; set; }
+    public int Bathrooms { get; set; }
 
-        // Media and documents
-        public string? DocumentUrl { get; set; }
-        public bool IsFeatured { get; set; } = false;
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    [Column("Floor_Level")]
+    public int FloorLevel { get; set; }
 
-        // Navigation properties
-        public ApplicationUser User { get; set; }
-        public ICollection<Image> Images { get; set; } = new List<Image>();
-        public ICollection<PriceEstimate> PriceEstimates { get; set; } = new List<PriceEstimate>();
-        public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+    [Name("Building Age (years)")]
+    public int BuildingAge { get; set; } // "Building Age (years)"
 
-        // Optional: Consider adding these if needed
-        // public bool HasParking { get; set; }
-        // public bool HasElevator { get; set; }
-    }
+    [Column("Type")]
+    [JsonPropertyName("type")]
+    public string Type { get; set; } // "Property Type"
+
+    public string FurnishingStatus { get; set; } // Furnishing Status
+
+    public string Amenities { get; set; } // Comma-separated
+
+    public string NearbyFacility { get; set; }
+
+    public string AddressLine1 { get; set; }
+    public string? AddressLine2 { get; set; }
+    public string City { get; set; } // Map to "Location"
+    public string Governorate { get; set; }
+    public string? PostalCode { get; set; }
+
+    public string yourName { get; set; }
+    public string MobilePhone { get; set; }
+
+    public string VerificationStatus { get; set; } = "Pending";
+    public bool IsFeatured { get; set; } = false;
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public string? DocumentUrl { get; set; }
+
+    // Navigation properties
+    public ApplicationUser User { get; set; }
+    public ICollection<Image> Images { get; set; } = new List<Image>();
+    public ICollection<PriceEstimate> PriceEstimates { get; set; } = new List<PriceEstimate>();
+    public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 }
