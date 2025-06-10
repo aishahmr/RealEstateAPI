@@ -20,7 +20,10 @@
         public int Floor { get; set; }
         public List<string> Images { get; set; } = new();
 
-        public int Area { get; set; } 
+        public int Area { get; set; }
+        public string VerificationStatus { get; set; }
+        public bool IsFeatured { get; set; }
+
 
         // UI-Specific Fields
         public string FurnishStatus { get; set; }

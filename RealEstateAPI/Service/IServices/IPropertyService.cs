@@ -23,13 +23,12 @@ namespace RealEstateAPI.Service.IServices
             List<string>? amenities,
             string? currentUserId = null);
         Task<HomePageResponseDTO> GetHomePageDataAsync();
-
-        Task<PropertyResponseDTO> GetPropertyByIdAsync(Guid id, string currentUserId = null);
-
+        Task<PaginatedPropertiesResponseDTO> GetUserPropertiesPaginatedAsync(string userId,int page = 1,int pageSize = 10);
         Task<PropertyResponseDTO> AddPropertyAsync(AddPropertyDTO propertyDto, string userId);
         Task<List<string>> UploadImagesAsync(Guid propertyId, List<IFormFile> images);
         Task<bool> UpdatePropertyAsync(UpdatePropertyDTO propertyDto, string currentUserId); 
         Task<bool> DeletePropertyAsync(Guid id, string currentUserId);
         Task<List<PropertyResponseDTO>> GetPropertiesNearUser(string userId, int radiusKm = 10);
+        Task<List<PropertyResponseDTO>> GetPropertiesByUserIdAsync(string userId);
     }
 }

@@ -150,40 +150,46 @@ namespace RealEstateAPI.Service.Services
                 .ToListAsync();
         }
 
-        public async Task<PropertyResponseDTO> GetPropertyByIdAsync(Guid id, string currentUserId = null)
+        public async Task<List<PropertyResponseDTO>> GetPropertiesByUserIdAsync(string userId)
         {
-            var property = await _context.Properties
+            return await _context.Properties
+                .Where(p => p.UserId == userId)
                 .Include(p => p.Images)
                 .Include(p => p.User)
-                .FirstOrDefaultAsync(p => p.Id == id);
-
-            if (property == null) return null;
-
-            return new PropertyResponseDTO
-            {
-                Id = property.Id,
-                Title = property.Title,
-                Description = property.Description,
-                OwnerName = property.yourName,
-                ContactInfo = property.MobilePhone,
-                Price = property.Price2025,
-                AddressLine1 = property.AddressLine1,
-                AddressLine2 = property.AddressLine2,
-                City = property.City,
-                Governorate = property.Governorate,
-                PostalCode = property.PostalCode,
-                Bedrooms = property.Bedrooms,
-                Bathrooms = property.Bathrooms,
-                Area = property.Size,
-                FurnishStatus = property.FurnishingStatus,
-                MainImageUrl = property.Images.FirstOrDefault()?.Url ?? "default-image.jpg",
-                Images = property.Images.Select(i => i.Url).ToList(),
-                Amenities = property.Amenities?.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
-                           ?? new List<string>(),
-                IsOwner = currentUserId != null &&
-                 property.UserId.Equals(currentUserId, StringComparison.OrdinalIgnoreCase),
-                CreatedAt = property.CreatedAt
-            };
+                .OrderByDescending(p => p.CreatedAt)
+                .Select(p => new PropertyResponseDTO
+                {
+                    Id = p.Id,
+                    Title = p.Title,
+                    Description = p.Description,
+                    OwnerName = p.yourName ?? p.User.UserName,
+                    ContactInfo = p.MobilePhone,
+                    Price = p.Price2025,
+                    AddressLine1 = p.AddressLine1,
+                    AddressLine2 = p.AddressLine2,
+                    City = p.City,
+                    Governorate = p.Governorate,
+                    PostalCode = p.PostalCode,
+                    Bedrooms = p.Bedrooms,
+                    Bathrooms = p.Bathrooms,
+                    Area = p.Size,
+                    FurnishStatus = p.FurnishingStatus,
+                    Type = p.Type,
+                    Images = p.Images.Select(i => i.Url).ToList(),
+                    MainImageUrl = p.Images.OrderBy(i => i.CreatedAt)
+                                         .Select(i => i.Url)
+                                         .FirstOrDefault() ?? "default-image.jpg",
+                    Amenities = !string.IsNullOrEmpty(p.Amenities)
+                        ? p.Amenities.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
+                        : new List<string>(),
+                    IsOwner = true, // Since these are the user's own properties
+                    CreatedAt = p.CreatedAt,
+                    VerificationStatus = p.VerificationStatus,
+                    IsFeatured = p.IsFeatured,
+                    Floor = p.FloorLevel
+                })
+                .AsNoTracking()
+                .ToListAsync();
         }
 
         public async Task<PropertyResponseDTO> AddPropertyAsync(AddPropertyDTO propertyDto, string userId)
@@ -311,33 +317,7 @@ namespace RealEstateAPI.Service.Services
             return await _context.SaveChangesAsync() > 0;
         }
 
-        public async Task<List<PropertyResponseDTO>> GetPropertiesByUserIdAsync(string userId)
-        {
-            var properties = await _context.Properties
-                .Where(p => p.UserId == userId)
-                .Include(p => p.Images)
-                .ToListAsync();
-
-            return properties.Select(p => new PropertyResponseDTO
-            {
-                Id = p.Id,
-                Title = p.Title,
-                Description = p.Description,
-                Price = p.Price2025,
-                AddressLine1 = p.AddressLine1,
-                AddressLine2 = p.AddressLine2,
-                City = p.City,
-                Governorate = p.Governorate,
-                PostalCode = p.PostalCode,
-                Bedrooms = p.Bedrooms,
-                Bathrooms = p.Bathrooms,
-                Area = p.Size,
-                FurnishStatus = p.FurnishingStatus,
-                Images = p.Images.Select(i => i.Url).ToList(), // Set Images list
-                CreatedAt = p.CreatedAt
-            }).ToList();
-        }
-
+        
         public async Task<List<string>> UploadImagesAsync(Guid propertyId, List<IFormFile> images)
         {
             var property = await _context.Properties.FindAsync(propertyId);
@@ -399,8 +379,8 @@ namespace RealEstateAPI.Service.Services
 
             return new HomePageResponseDTO
             {
-                RecommendedProperties = recentProperties, // Now matches UI perfectly
-                AllProperties = new List<PropertyResponseDTO>() // Omit if not needed
+                RecommendedProperties = recentProperties, 
+                AllProperties = new List<PropertyResponseDTO>() 
             };
         }
 
@@ -439,7 +419,7 @@ namespace RealEstateAPI.Service.Services
                     FurnishStatus = p.FurnishingStatus,
                     Type = p.Type,
                     CreatedAt = p.CreatedAt,
-                    IsOwner = p.UserId == userId, // Critical fix
+                    IsOwner = p.UserId == userId, 
                     OwnerName = p.UserId == userId ? "You" : p.yourName ?? "Owner",
                     ContactInfo = p.UserId == userId ? user.PhoneNumber : p.MobilePhone ?? "Contact unavailable",
 
@@ -458,6 +438,62 @@ namespace RealEstateAPI.Service.Services
                 })
     .AsNoTracking()
     .ToListAsync();
+        }
+
+        public async Task<PaginatedPropertiesResponseDTO> GetUserPropertiesPaginatedAsync(
+    string userId,
+    int page = 1,
+    int pageSize = 10)
+        {
+            var query = _context.Properties
+                .Where(p => p.UserId == userId)
+                .Include(p => p.Images)
+                .Include(p => p.User);
+
+            var totalCount = await query.CountAsync();
+
+            var properties = await query
+                .OrderByDescending(p => p.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(p => new PropertyResponseDTO
+                {
+                    Id = p.Id,
+                    Title = p.Title,
+                    Description = p.Description,
+                    OwnerName = p.yourName ?? p.User.UserName,
+                    ContactInfo = p.MobilePhone,
+                    Price = p.Price2025,
+                    AddressLine1 = p.AddressLine1,
+                    AddressLine2 = p.AddressLine2,
+                    City = p.City,
+                    Governorate = p.Governorate,
+                    PostalCode = p.PostalCode,
+                    Bedrooms = p.Bedrooms,
+                    Bathrooms = p.Bathrooms,
+                    Area = p.Size,
+                    FurnishStatus = p.FurnishingStatus,
+                    Type = p.Type,
+                    Images = p.Images.Select(i => i.Url).ToList(),
+                    MainImageUrl = p.Images.OrderBy(i => i.CreatedAt)
+                                         .Select(i => i.Url)
+                                         .FirstOrDefault() ?? "default-image.jpg",
+                    Amenities = !string.IsNullOrEmpty(p.Amenities)
+                        ? p.Amenities.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
+                        : new List<string>(),                   
+                    CreatedAt = p.CreatedAt
+                })
+                .AsNoTracking()
+                .ToListAsync();
+
+            return new PaginatedPropertiesResponseDTO
+            {
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize,
+                Properties = properties
+
+            };
         }
 
 

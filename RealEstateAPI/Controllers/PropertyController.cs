@@ -624,6 +624,23 @@ namespace RealEstateAPI.Controllers
             };
         }
 
+        [Authorize]
+        [HttpGet("user-properties")]
+        public async Task<IActionResult> GetUserProperties(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            var userId = User.FindFirstValue("userId") ??
+                         User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new { Message = "User identification not found" });
+            }
+
+            var result = await _propertyService.GetUserPropertiesPaginatedAsync(userId, page, pageSize);
+            return Ok(result);
+        }
 
 
         [HttpGet("near-me")]
