@@ -17,6 +17,8 @@ public class AddPropertyDTO
     [JsonPropertyName("price")]
     public decimal Price { get; set; }
 
+    public string NearbyFacility { get; set; }
+
     [Required]
     public string AddressLine1 { get; set; } // e.g., "35 Nile Corniche"
 

@@ -14,14 +14,7 @@ public class Property
 
     public string Description { get; set; }
 
-    // Price fields for ML model
-    [Column("Price_2023")]
-    public decimal Price2023 { get; set; }
-
-    [Column("Price_2024")]
-    public decimal Price2024 { get; set; }
-
-    [Column("Price_2025")]
+        [Column("Price_2025")]
     public decimal Price2025 { get; set; }
 
     [Column("Area")]

@@ -16,8 +16,7 @@ public class PricePredictionService
     {
         var request = new
         {
-            price2023 = data.Price2023,
-            price2024 = data.Price2024,
+           
             price2025 = data.Price2025,
             area = data.Area,
             bedrooms = data.Bedrooms,
@@ -37,8 +36,7 @@ public class PricePredictionService
 
 public class PropertyData
 {
-    public decimal Price2023 { get; set; }
-    public decimal Price2024 { get; set; }
+    
     public decimal Price2025 { get; set; }
     public int Area { get; set; }
     public int Bedrooms { get; set; }

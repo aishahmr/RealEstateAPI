@@ -46,7 +46,7 @@ namespace RealEstateAPI.Service.Services
 
             var user = new ApplicationUser
             {
-                Id = Guid.NewGuid().ToString(), // ← Critical fix
+                Id = Guid.NewGuid().ToString(), 
                 Email = model.Email,
                 UserName = model.Email,
                 PhoneNumber = model.PhoneNumber,

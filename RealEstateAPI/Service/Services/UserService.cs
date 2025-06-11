@@ -67,7 +67,7 @@ namespace RealEstateAPI.Service.Services
                 Bio = user.Bio,
                 Gender = user.Gender,
                 ProfilePictureUrl = user.ProfilePictureUrl,
-                UserName = user.UserName // Added Username field
+                UserName = user.UserName 
             };
         }
 
@@ -86,7 +86,7 @@ namespace RealEstateAPI.Service.Services
 
             if (!string.IsNullOrWhiteSpace(dto.Username))
             {
-                user.UserName = dto.Username; // Update the username if provided
+                user.UserName = dto.Username; 
             }
 
             if (!string.IsNullOrWhiteSpace(dto.PhoneNumber))
@@ -132,10 +132,8 @@ namespace RealEstateAPI.Service.Services
 
             if (user == null) return null;
 
-            // Define the upload directory
             var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
-            Directory.CreateDirectory(uploadsDir); // Ensure the uploads directory exists
-
+            Directory.CreateDirectory(uploadsDir); 
             // Generate a unique file name for the uploaded file
             var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
             var filePath = Path.Combine(uploadsDir, fileName);
@@ -146,15 +144,14 @@ namespace RealEstateAPI.Service.Services
                 await file.CopyToAsync(stream);
             }
 
-            // Save the file path in the user's profile and update the user
             user.ProfilePictureUrl = $"/uploads/{fileName}";
             await _userManager.UpdateAsync(user);
 
-            // Return the file URL
+
             return user.ProfilePictureUrl;
         }
 
-        // Methods to implement later
+
         public Task<bool> ApproveProperty(Guid propertyId)
         {
             throw new NotImplementedException();

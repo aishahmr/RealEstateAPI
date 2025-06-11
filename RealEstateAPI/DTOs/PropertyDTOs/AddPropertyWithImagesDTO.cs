@@ -20,6 +20,8 @@ namespace RealEstateAPI.DTOs.PropertyDTOs
         public string? AddressLine2 { get; set; }
         public string City { get; set; }
         public string Governorate { get; set; }
+        public string NearbyFacility { get; set; }
+
         public string? PostalCode { get; set; }
 
         public int Bedrooms { get; set; }
@@ -41,6 +43,7 @@ namespace RealEstateAPI.DTOs.PropertyDTOs
         public List<string> Amenities { get; set; } = new();
 
         public int Floor { get; set; }
+
 
         [AllowedValues("Apartment", "Villa", "House", ErrorMessage = "Invalid type")]
         public string? Type { get; set; } = "Apartment";

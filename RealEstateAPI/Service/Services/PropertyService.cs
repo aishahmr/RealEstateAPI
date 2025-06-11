@@ -23,7 +23,6 @@ namespace RealEstateAPI.Service.Services
             _userManager = userManager;
         }
 
-        // Original parameterless version
         public async Task<List<PropertyResponseDTO>> GetAllPropertiesAsync()
         {
             return await GetAllPropertiesAsync(
@@ -41,7 +40,6 @@ namespace RealEstateAPI.Service.Services
                 );
         }
 
-        // New filtered version
         public async Task<List<PropertyResponseDTO>> GetAllPropertiesAsync(
             string? searchTerm,
             string? location,
@@ -130,6 +128,7 @@ namespace RealEstateAPI.Service.Services
                     AddressLine2 = p.AddressLine2,
                     City = p.City,
                     Governorate = p.Governorate,
+                    NearbyFacility = p.NearbyFacility,
                     PostalCode = p.PostalCode,
                     Bedrooms = p.Bedrooms,
                     Bathrooms = p.Bathrooms,
@@ -169,6 +168,7 @@ namespace RealEstateAPI.Service.Services
                     AddressLine2 = p.AddressLine2,
                     City = p.City,
                     Governorate = p.Governorate,
+                    NearbyFacility = p.NearbyFacility,
                     PostalCode = p.PostalCode,
                     Bedrooms = p.Bedrooms,
                     Bathrooms = p.Bathrooms,
@@ -182,7 +182,7 @@ namespace RealEstateAPI.Service.Services
                     Amenities = !string.IsNullOrEmpty(p.Amenities)
                         ? p.Amenities.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
                         : new List<string>(),
-                    IsOwner = true, // Since these are the user's own properties
+                    IsOwner = true, 
                     CreatedAt = p.CreatedAt,
                     VerificationStatus = p.VerificationStatus,
                     IsFeatured = p.IsFeatured,
@@ -215,7 +215,8 @@ namespace RealEstateAPI.Service.Services
                 VerificationStatus = "Pending",
                 CreatedAt = DateTime.UtcNow,
                 yourName = propertyDto.YourName,
-                MobilePhone = propertyDto.MobilePhone
+                MobilePhone = propertyDto.MobilePhone,
+                NearbyFacility = propertyDto.NearbyFacility
             };
 
             _context.Properties.Add(property);
@@ -238,6 +239,7 @@ namespace RealEstateAPI.Service.Services
                 Bedrooms = property.Bedrooms,
                 Bathrooms = property.Bathrooms,
                 Area = property.Size,
+                NearbyFacility = propertyDto.NearbyFacility,
                 FurnishStatus = property.FurnishingStatus,
                 Amenities = property.Amenities?.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
                            ?? new List<string>()
@@ -252,7 +254,6 @@ namespace RealEstateAPI.Service.Services
 
             if (property == null) return false;
 
-            // Flexible ownership check - works with both email or GUID user ID
             bool isOwner;
 
             if (currentUserIdentifier.Contains("@"))
@@ -284,6 +285,7 @@ namespace RealEstateAPI.Service.Services
             property.Size = (int)propertyDto.Area;
             property.FurnishingStatus = propertyDto.FurnishStatus;
             property.Amenities = string.Join(",", propertyDto.Amenities ?? new List<string>());
+            property.NearbyFacility = propertyDto.NearbyFacility;
 
             _context.Properties.Update(property);
             return await _context.SaveChangesAsync() > 0;
@@ -362,7 +364,6 @@ namespace RealEstateAPI.Service.Services
 
         public async Task<HomePageResponseDTO> GetHomePageDataAsync()
         {
-            // Get 6 most recent properties (matching UI exactly)
             var recentProperties = await _context.Properties
                 .OrderByDescending(p => p.CreatedAt)
                 .Take(6)
@@ -385,33 +386,27 @@ namespace RealEstateAPI.Service.Services
         }
 
         public async Task<List<PropertyResponseDTO>> GetPropertiesNearUser(string userId, int radiusKm = 10)
-        {
-            // 1. Get user's location
+        {       
             var user = await _userManager.FindByIdAsync(userId);
             if (user?.City == null || user.Governorate == null)
                 return new List<PropertyResponseDTO>();
 
-            // 2. Find properties in same governorate (basic implementation)
             return await _context.Properties
                 .Where(p => p.Governorate == user.Governorate)
                 .OrderBy(p => p.City == user.City ? 0 : 1) // Prioritize same city
                 .Take(20) // Limit results
                 .Select(p => new PropertyResponseDTO
                 {
-                    // Core fields
                     Id = p.Id,
                     Title = p.Title,
                     Description = p.Description,
                     Price = p.Price2025,
-
-                    // Location fields (REQUIRED for LocationShort computation)
                     City = p.City,
                     Governorate = p.Governorate,
+                    NearbyFacility = p.NearbyFacility,
                     AddressLine1 = p.AddressLine1,
                     AddressLine2 = p.AddressLine2,
                     PostalCode = p.PostalCode,
-
-                    // Property details
                     Bedrooms = p.Bedrooms,
                     Bathrooms = p.Bathrooms,
                     Floor = p.FloorLevel,
@@ -422,19 +417,14 @@ namespace RealEstateAPI.Service.Services
                     IsOwner = p.UserId == userId, 
                     OwnerName = p.UserId == userId ? "You" : p.yourName ?? "Owner",
                     ContactInfo = p.UserId == userId ? user.PhoneNumber : p.MobilePhone ?? "Contact unavailable",
-
-                    // Images
                     Images = p.Images.OrderBy(i => i.CreatedAt).Select(i => i.Url).ToList(),
                     MainImageUrl = p.Images.OrderBy(i => i.CreatedAt)
                              .Select(i => i.Url)
                              .FirstOrDefault() ?? "/images/default.jpg",
-
-                    // Amenities
                     Amenities = !string.IsNullOrEmpty(p.Amenities)
             ? p.Amenities.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
             : new List<string>()
 
-                    // LocationShort is automatically computed from City/Governorate!
                 })
     .AsNoTracking()
     .ToListAsync();

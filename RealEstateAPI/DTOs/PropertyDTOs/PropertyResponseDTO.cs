@@ -14,6 +14,8 @@
         public string? AddressLine2 { get; set; }
         public string City { get; set; }
         public string Governorate { get; set; }
+        public string NearbyFacility { get; set; }
+
         public string? PostalCode { get; set; }
         public int Bedrooms { get; set; }
         public int Bathrooms { get; set; }

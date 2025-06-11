@@ -72,10 +72,23 @@ namespace RealEstateAPI.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task<ActionResult<PropertyResponseDTO>> AddPropertyWithImages(
-    [FromForm] AddPropertyWithImagesDTO dto)
+        [Consumes("multipart/form-data")]
+        public async Task<ActionResult<PropertyResponseDTO>> AddPropertyWithImages([FromForm] AddPropertyWithImageWrapper wrapper)
         {
-            // 1. VALIDATION
+            AddPropertyWithImagesDTO propertyDto;
+
+            try
+            {
+                propertyDto = JsonSerializer.Deserialize<AddPropertyWithImagesDTO>(wrapper.PropertyJson, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                })!;
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = "Invalid property JSON", Error = ex.Message });
+            }
+
             if (!ModelState.IsValid)
             {
                 return BadRequest(new
@@ -87,44 +100,39 @@ namespace RealEstateAPI.Controllers
                 });
             }
 
-            // 2. GET USER
-            // 2. GET USER ID FROM TOKEN
+            
             var userIdClaim = User.FindFirstValue("userId") ??
-                              User.FindFirstValue(ClaimTypes.NameIdentifier);
+                             User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             if (string.IsNullOrEmpty(userIdClaim))
             {
                 return Unauthorized("Invalid user token");
             }
 
-            var userId = Guid.Parse(userIdClaim); // parse claim into real GUID
-
-
-            // 3. CREATE PROPERTY ENTITY
             var property = new Property
             {
                 Id = Guid.NewGuid(),
-                UserId = userId.ToString(),
-                Title = dto.Title?.Trim(),
-                Description = dto.Description?.Trim(),
-                Price2025 = dto.Price,
-                AddressLine1 = dto.AddressLine1?.Trim(),
-                AddressLine2 = dto.AddressLine2?.Trim(),
-                City = dto.City?.Trim(),
-                Governorate = dto.Governorate?.Trim(),
-                PostalCode = dto.PostalCode?.Trim(),
-
-                Bedrooms = dto.Bedrooms,
-                Bathrooms = dto.Bathrooms,
-                Size = (int)(dto.Area > 0 ? dto.Area : 0),
-                yourName = dto.YourName?.Trim() ?? User.Identity?.Name,
-                MobilePhone = dto.MobilePhone?.Trim(),
-                FurnishingStatus = dto.FurnishStatus ?? "Not Furnished",
-                Amenities = dto.Amenities != null ? string.Join(",", dto.Amenities) : "",
-                Type = dto.Type ?? "Apartment",
+                UserId = userIdClaim,
+                Title = propertyDto.Title?.Trim(),
+                Description = propertyDto.Description?.Trim(),
+                Price2025 = propertyDto.Price,
+                AddressLine1 = propertyDto.AddressLine1?.Trim(),
+                AddressLine2 = propertyDto.AddressLine2?.Trim(),
+                City = propertyDto.City?.Trim(),
+                Governorate = propertyDto.Governorate?.Trim(),
+                NearbyFacility = propertyDto.NearbyFacility,
+                PostalCode = propertyDto.PostalCode?.Trim(),
+                Bedrooms = propertyDto.Bedrooms,
+                Bathrooms = propertyDto.Bathrooms,
+                Size = (int)(propertyDto.Area > 0 ? propertyDto.Area : 0),
+                yourName = propertyDto.YourName?.Trim() ?? User.Identity?.Name,
+                MobilePhone = propertyDto.MobilePhone?.Trim(),
+                FurnishingStatus = propertyDto.FurnishStatus ?? "Not Furnihed",
+                Amenities = propertyDto.Amenities != null ? string.Join(",", propertyDto.Amenities) : "",
+                Type = propertyDto.Type ?? "Apartment",
                 VerificationStatus = "Pending",
                 CreatedAt = DateTime.UtcNow,
-                FloorLevel = dto.Floor
+                FloorLevel = propertyDto.Floor
             };
 
             // 4. DATABASE TRANSACTION
@@ -138,13 +146,13 @@ namespace RealEstateAPI.Controllers
 
                 var imageUrls = new List<string>();
 
-                // 6. HANDLE IMAGES IF ANY
-                if (dto.Files != null && dto.Files.Count > 0)
+                // 6. HANDLE IMAGES IF PROVIDED
+                if (wrapper.Files.Count > 0)
                 {
                     var uploadsFolder = Path.Combine("wwwroot", "uploads", "properties");
                     Directory.CreateDirectory(uploadsFolder);
 
-                    foreach (var file in dto.Files)
+                    foreach (var file in wrapper.Files)
                     {
                         if (file.Length == 0) continue;
 
@@ -169,13 +177,12 @@ namespace RealEstateAPI.Controllers
 
                         imageUrls.Add(imageUrl);
                     }
+                    await _context.SaveChangesAsync();
                 }
 
-                // 7. FINAL SAVE
-                await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                // 8. RETURN RESPONSE
+                // 7. RETURN RESPONSE
                 return Ok(new PropertyResponseDTO
                 {
                     Id = property.Id,
@@ -183,15 +190,16 @@ namespace RealEstateAPI.Controllers
                     MainImageUrl = imageUrls.FirstOrDefault() ?? "/images/default.jpg",
                     Title = property.Title,
                     Description = property.Description,
-                    OwnerName = property.yourName, // Add this
-                    ContactInfo = property.MobilePhone, // Add this
+                    OwnerName = property.yourName,
+                    ContactInfo = property.MobilePhone,
                     IsOwner = true,
                     Price = property.Price2025,
-                    AddressLine1 = dto.AddressLine1?.Trim(),  
-                    AddressLine2 = dto.AddressLine2?.Trim(),
-                    City = dto.City?.Trim(),
-                    Governorate = dto.Governorate?.Trim(),
-                    PostalCode = dto.PostalCode?.Trim(),
+                    AddressLine1 = property.AddressLine1,
+                    AddressLine2 = property.AddressLine2,
+                    City = property.City,
+                    Governorate = property.Governorate,
+                    NearbyFacility = property.NearbyFacility,
+                    PostalCode = property.PostalCode,
                     Bedrooms = property.Bedrooms,
                     Bathrooms = property.Bathrooms,
                     Floor = property.FloorLevel,
@@ -214,108 +222,7 @@ namespace RealEstateAPI.Controllers
         }
 
 
-        [HttpPost]
-        [Authorize]
-        [Route("api/Property/Basic")] 
-        [Obsolete("Use AddPropertyWithImages instead")]
-        [ApiExplorerSettings(IgnoreApi = true)]
-
-        public async Task<IActionResult> AddProperty([FromBody] AddPropertyDTO propertyDto)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new
-                {
-                    Message = "Validation failed",
-                    Errors = ModelState.Values
-                        .SelectMany(v => v.Errors)
-                        .Select(e => e.ErrorMessage)
-                });
-            }
-
-            // . Get user with case-insensitive search
-            var userId = User.FindFirstValue("userId") ??
-                        User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => EF.Functions.Collate(u.Id, "SQL_Latin1_General_CP1_CI_AS") == userId);
-
-            if (user == null)
-            {
-                return BadRequest(new
-                {
-                    Message = "User account not found",
-                    DebugInfo = new
-                    {
-                        ClaimUserId = userId,
-                        FirstUserIdInDb = await _context.Users.Select(u => u.Id).FirstOrDefaultAsync()
-                    }
-                });
-            }
-
-            var property = new Property
-            {
-                Id = Guid.NewGuid(),
-                UserId = user.Id,    
-                Title = propertyDto.Title?.Trim(),
-                Description = propertyDto.Description?.Trim(),
-                Price2025 = propertyDto.Price,
-                AddressLine1 = propertyDto.AddressLine1?.Trim(),
-                AddressLine2 = propertyDto.AddressLine2?.Trim(),
-                City = propertyDto.City?.Trim(),
-                Governorate = propertyDto.Governorate?.Trim(),
-                PostalCode = propertyDto.PostalCode?.Trim(),
-                Bedrooms = propertyDto.Bedrooms,
-                Bathrooms = propertyDto.Bathrooms,
-                Size = (int)(propertyDto.Area > 0 ? propertyDto.Area : 0),
-                yourName = propertyDto.YourName?.Trim(),
-                MobilePhone = propertyDto.MobilePhone?.Trim(),
-                FurnishingStatus = propertyDto.FurnishStatus ?? "Not Furnished",
-                Amenities = propertyDto.Amenities != null ? string.Join(",", propertyDto.Amenities) : "",
-                Type = propertyDto.Type ?? "Apartment",
-                VerificationStatus = "Pending",
-                CreatedAt = DateTime.UtcNow
-            };
-
-            try
-            {
-                _context.Properties.Add(property);
-                await _context.SaveChangesAsync();
-
-                return Ok(new PropertyResponseDTO
-                {
-                    Id = property.Id,
-                    Title = property.Title,
-                    Description = property.Description,
-                    Price = property.Price2025,
-                    AddressLine1 = property.AddressLine1,
-                    AddressLine2 = property.AddressLine2,
-                    City = property.City,
-                    Governorate = property.Governorate,
-                    PostalCode = property.PostalCode,
-                    Bedrooms = property.Bedrooms,
-                    Bathrooms = property.Bathrooms,
-                    Area = property.Size,
-                    FurnishStatus = property.FurnishingStatus
-                });
-            }
-            catch (DbUpdateException dbEx)
-            {
-                return StatusCode(500, new
-                {
-                    Message = "Database error",
-                    Error = dbEx.InnerException?.Message ?? dbEx.Message
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    Message = "Server error",
-                    Error = ex.Message
-                });
-            }
-        }
+        
 
 
         [Authorize]

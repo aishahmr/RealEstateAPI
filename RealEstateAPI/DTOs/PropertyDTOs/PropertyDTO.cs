@@ -10,6 +10,7 @@
         public string City { get; set; }
         public string Governorate { get; set; }
         public string? PostalCode { get; set; }
+        public string NearbyFacility { get; set; }
         public int Size { get; set; } // Consider renaming to 'Area' for UI consistency
         public int Bedrooms { get; set; }
         public int Bathrooms { get; set; }
