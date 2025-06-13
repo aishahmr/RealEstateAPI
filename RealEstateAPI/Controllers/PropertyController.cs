@@ -73,22 +73,10 @@ namespace RealEstateAPI.Controllers
         [HttpPost]
         [Authorize]
         [Consumes("multipart/form-data")]
-        public async Task<ActionResult<PropertyResponseDTO>> AddPropertyWithImages([FromForm] AddPropertyWithImageWrapper wrapper)
+        public async Task<ActionResult<PropertyResponseDTO>> AddPropertyWithImages(
+    [FromForm] AddPropertyWithImagesDTO dto)
         {
-            AddPropertyWithImagesDTO propertyDto;
-
-            try
-            {
-                propertyDto = JsonSerializer.Deserialize<AddPropertyWithImagesDTO>(wrapper.PropertyJson, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                })!;
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { Message = "Invalid property JSON", Error = ex.Message });
-            }
-
+            // 1. VALIDATION
             if (!ModelState.IsValid)
             {
                 return BadRequest(new
@@ -100,7 +88,7 @@ namespace RealEstateAPI.Controllers
                 });
             }
 
-            
+            // 2. GET USER FROM TOKEN
             var userIdClaim = User.FindFirstValue("userId") ??
                              User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -109,30 +97,31 @@ namespace RealEstateAPI.Controllers
                 return Unauthorized("Invalid user token");
             }
 
+            // 3. CREATE PROPERTY ENTITY
             var property = new Property
             {
                 Id = Guid.NewGuid(),
                 UserId = userIdClaim,
-                Title = propertyDto.Title?.Trim(),
-                Description = propertyDto.Description?.Trim(),
-                Price2025 = propertyDto.Price,
-                AddressLine1 = propertyDto.AddressLine1?.Trim(),
-                AddressLine2 = propertyDto.AddressLine2?.Trim(),
-                City = propertyDto.City?.Trim(),
-                Governorate = propertyDto.Governorate?.Trim(),
-                NearbyFacility = propertyDto.NearbyFacility,
-                PostalCode = propertyDto.PostalCode?.Trim(),
-                Bedrooms = propertyDto.Bedrooms,
-                Bathrooms = propertyDto.Bathrooms,
-                Size = (int)(propertyDto.Area > 0 ? propertyDto.Area : 0),
-                yourName = propertyDto.YourName?.Trim() ?? User.Identity?.Name,
-                MobilePhone = propertyDto.MobilePhone?.Trim(),
-                FurnishingStatus = propertyDto.FurnishStatus ?? "Not Furnihed",
-                Amenities = propertyDto.Amenities != null ? string.Join(",", propertyDto.Amenities) : "",
-                Type = propertyDto.Type ?? "Apartment",
+                Title = dto.Title?.Trim(),
+                Description = dto.Description?.Trim(),
+                Price2025 = dto.Price,
+                AddressLine1 = dto.AddressLine1?.Trim(),
+                AddressLine2 = dto.AddressLine2?.Trim(),
+                City = dto.City?.Trim(),
+                Governorate = dto.Governorate?.Trim(),
+                NearbyFacility = dto.NearbyFacility,
+                PostalCode = dto.PostalCode?.Trim(),
+                Bedrooms = dto.Bedrooms,
+                Bathrooms = dto.Bathrooms,
+                Size = (int)(dto.Area > 0 ? dto.Area : 0),
+                yourName = dto.YourName?.Trim() ?? User.Identity?.Name,
+                MobilePhone = dto.MobilePhone?.Trim(),
+                FurnishingStatus = dto.FurnishStatus ?? "Not Furnished",
+                Amenities = dto.Amenities != null ? string.Join(",", dto.Amenities) : "",
+                Type = dto.Type ?? "Apartment",
                 VerificationStatus = "Pending",
                 CreatedAt = DateTime.UtcNow,
-                FloorLevel = propertyDto.Floor
+                FloorLevel = dto.Floor
             };
 
             // 4. DATABASE TRANSACTION
@@ -147,12 +136,12 @@ namespace RealEstateAPI.Controllers
                 var imageUrls = new List<string>();
 
                 // 6. HANDLE IMAGES IF PROVIDED
-                if (wrapper.Files.Count > 0)
+                if (dto.Files?.Count > 0)
                 {
                     var uploadsFolder = Path.Combine("wwwroot", "uploads", "properties");
                     Directory.CreateDirectory(uploadsFolder);
 
-                    foreach (var file in wrapper.Files)
+                    foreach (var file in dto.Files)
                     {
                         if (file.Length == 0) continue;
 
@@ -222,7 +211,6 @@ namespace RealEstateAPI.Controllers
         }
 
 
-        
 
 
         [Authorize]
